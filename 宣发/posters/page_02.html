@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1242px; height: 1660px;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    color: #f5f5f5;
+    background: linear-gradient(160deg, #141e30 0%, #243b55 100%);
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 80px 72px; overflow: hidden;
+  }
+  .hero h1 { font-size: 80px; line-height: 1.3; font-weight: 800; }
+  .hero h1 em { color: #f7971e; font-style: normal; }
+  .hero .sub { font-size: 36px; line-height: 1.6; opacity: .85; margin-top: 28px; }
+  .vs { display: flex; flex-direction: column; gap: 32px; }
+  .card {
+    border-radius: 24px; padding: 40px 44px;
+    display: flex; flex-direction: column; gap: 18px;
+  }
+  .card.bad { background: #ff4d4d14; border: 2px solid #ff4d4d66; }
+  .card.good { background: #38ef7d14; border: 2px solid #38ef7d88; }
+  .card h3 { font-size: 40px; }
+  .card.bad h3 { color: #ff8080; }
+  .card.good h3 { color: #38ef7d; }
+  .card p { font-size: 32px; line-height: 1.6; opacity: .9; }
+  .footer {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 28px; opacity: .8;
+  }
+  .footer .cta { color: #f7971e; font-weight: 700; }
+</style>
+</head>
+<body>
+  <div class="hero">
+    <h1>以前的守夜方案<br><em>太离谱了</em></h1>
+    <p class="sub">夜里 AI 额度用尽，任务断在那。为了让它自动继续，有人竟然……</p>
+  </div>
+
+  <div class="vs">
+    <div class="card bad">
+      <h3>❌ 旧方案：computer use 守夜</h3>
+      <p>开另一个 AI agent，每隔几分钟截图、模拟鼠标点"继续"——烧 token、占机器、还随时翻车。</p>
+    </div>
+    <div class="card good">
+      <h3>✅ quota-nanny：一个 shell</h3>
+      <p>每 30 分钟发一个最小探测请求，额度恢复就执行续跑命令。零 GUI、零多余 token、跑完自动退出。</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>github.com/limpidwei/quota-nanny</span>
+    <span class="cta">工作原理 →</span>
+  </div>
+</body>
+</html>
