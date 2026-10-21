@@ -2,6 +2,8 @@
 
 > 额度用尽不用熬夜等。一个后台 shell，帮你的 AI agent 蹲到额度恢复，自动接着干活。
 > Hit an LLM usage limit at 1 AM? A tiny background shell polls until quota resets, then resumes the task — no computer-use agent, no token burn.
+>
+> 前身：[cc-resume](https://github.com/limpidwei/cc-resume)（UI Automation 敲回车方案，已归档）。quota-nanny 是它的纯 shell 重写。
 
 ## 解决什么问题
 
