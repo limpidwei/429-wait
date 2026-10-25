@@ -24,7 +24,35 @@ git clone https://github.com/limpidwei/quota-nanny.git
 pwsh quota-nanny\install.ps1   # 装到 ~/.local/bin（已在 PATH），生成 .cmd 全局命令
 ```
 
-Linux / macOS / Termux 直接用 `bin/quota-nanny.sh`。
+Linux / macOS / Termux 直接用 `bin/quota-nanny.sh`，或 `bin/quota-nanny.py`（只需 python3）。
+
+## v2：Python 版（推荐）
+
+`bin/quota-nanny.py` 是同一件事的重写，因为 v1 的"探测一条命令"模型实测有三个坑：
+
+| v1 的坑 | 实际发生了什么 | v2 怎么绕开 |
+|---|---|---|
+| 用 `claude -p ping` 当探针 | Claude Code 撞 429 会**内部无限重试**，永不返回 → nanny 卡死在第一次探测 | 直连 HTTP 打 `/v1/messages`，25 秒硬超时 |
+| 探针用极小的 `max_tokens` | 按 `max_tokens` 计量的中转站：额度耗尽时 `max_tokens=1` 仍返回 200，假恢复 | 默认 `--probe-max-tokens 64`（实测校准值） |
+| 靠 tail 日志发现限额 | 限额提示只出现在 TUI，**不写日志** → watcher 永远读不到输入 | 主动轮询，不需要任何日志源 |
+
+端点/密钥/模型默认读 `~/.claude/settings.json` 的 `env`（`ANTHROPIC_BASE_URL` / `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL`）。
+
+```bash
+python bin/quota-nanny.py --interval 300 --tag mytask \
+    --on-recover "claude --resume <session-id> -p continue"
+```
+
+| 参数 | 默认 | 说明 |
+|---|---|---|
+| `--interval` | 300 | 两次探测间隔（秒） |
+| `--max-attempts` | 120 | 最大探测次数，超了退出码 2 |
+| `--on-recover` | 空 | 恢复后执行的续跑命令 |
+| `--probe-max-tokens` | 64 | 探针 max_tokens；小于 64 可能被计费式中转站误报 200 |
+| `--tag` / `--state-dir` | `default` / `~/.quota-nanny` | 实例标签（同标签单实例）、状态目录 |
+| `--settings` | `~/.claude/settings.json` | 凭据来源，可用 `--base-url/--api-key/--model` 覆盖 |
+
+网络抖动（非 429/401/403 的错误）不算恢复，会继续等——只在探测真的拿到 200 时才写 `nanny-<tag>.ok` 并执行 `--on-recover`。
 
 ## 用法
 
@@ -76,6 +104,7 @@ quota-nanny-watch.cmd -LogFile "C:\path\to\agent-session.log" `
 ```powershell
 pwsh tests\e2e-test.ps1      # 守护进程：常驻→定时重试→恢复自动退出
 pwsh tests\watch-test.ps1    # watcher：日志出现 limit → 自动拉起 nanny
+python tests\py-e2e.py       # v2：本地 mock 先 429 两次再 200，验证恢复+续跑
 ```
 
 ## English summary

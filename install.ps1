@@ -16,7 +16,16 @@ foreach ($name in 'quota-nanny.ps1','quota-nanny-watch.ps1') {
   )
 }
 Copy-Item (Join-Path $src 'bin\quota-nanny.sh') -Destination $dest -Force
+
+# v2: Python daemon. The .cmd shim keeps the same name minus the extension.
+Copy-Item (Join-Path $src 'bin\quota-nanny.py') -Destination $dest -Force
+Set-Content -Path (Join-Path $dest 'quota-nanny-py.cmd') -Encoding ASCII -Value (
+  "@echo off`r`npython `"%USERPROFILE%\.local\bin\quota-nanny.py`" %*"
+)
+
 Write-Output "installed to $dest"
-Write-Output "  quota-nanny.cmd        - daemon (wait out limit, then resume)"
-Write-Output "  quota-nanny-watch.cmd  - log watcher (auto-spawn daemon on limit)"
+Write-Output "  quota-nanny-py.cmd     - v2 daemon, Python, probes the API directly (recommended)"
+Write-Output "  quota-nanny.cmd        - v1 daemon (probe command based)"
+Write-Output "  quota-nanny-watch.cmd  - log watcher (auto-spawn v1 daemon on limit)"
 Write-Output "  quota-nanny.sh         - bash version for Linux/macOS/Termux"
+Write-Output "  quota-nanny.py         - v2 script itself (python quota-nanny.py --help)"
