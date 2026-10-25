@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-End-to-end test for bin/quota-nanny.py - never touches a real API.
+End-to-end test for bin/429-wait.py - never touches a real API.
 
 A local mock endpoint answers 429 for the first N probes, then 200. The test
 asserts the nanny logs STILL LIMITED, writes nanny-<tag>.ok, and runs
@@ -20,7 +20,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 FAILS_BEFORE_OK = 2
 HERE = os.path.dirname(os.path.abspath(__file__))
-NANNY = os.path.join(HERE, "..", "bin", "quota-nanny.py")
+NANNY = os.path.join(HERE, "..", "bin", "429-wait.py")
 PY = sys.executable or "python"
 
 state = {"calls": 0, "limited": 0, "ok": 0}

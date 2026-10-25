@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Mock LLM CLI for quota-nanny tests. Simulates "usage limit" for the first N
+  Mock LLM CLI for 429-wait tests. Simulates "usage limit" for the first N
   invocations (tracked in a state file), then starts succeeding.
 
 .USAGE

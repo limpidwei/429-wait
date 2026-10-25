@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
   Watcher e2e test: a usage-limit line appearing in a watched agent log must
-  cause quota-nanny-watch to spawn the nanny, which polls until recovery,
+  cause 429-wait-watch to spawn the daemon, which polls until recovery,
   then exits by itself.
 #>
 [CmdletBinding()]
@@ -13,7 +13,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $root      = Split-Path $PSScriptRoot -Parent
-$watcher   = Join-Path $root 'bin\quota-nanny-watch.ps1'
+$watcher   = Join-Path $root 'bin\429-wait-watch.ps1'
 $mock      = Join-Path $root 'mock\mock-llm.ps1'
 $stateDir  = Join-Path $root "tests\state\$RunId"
 $null = New-Item -ItemType Directory -Force -Path $stateDir

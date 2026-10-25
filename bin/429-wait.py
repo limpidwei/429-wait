@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-quota-nanny v2 - usage-limit watchdog (Python rewrite)
+429-wait v2 - usage-limit watchdog (Python rewrite)
 
 Why a rewrite (the PowerShell/bash v1 has three failure modes this avoids):
 
@@ -26,7 +26,7 @@ overridden:
   ANTHROPIC_BASE_URL, ANTHROPIC_API_KEY, ANTHROPIC_MODEL
 
 Usage:
-  python quota-nanny.py --interval 300 --tag mytask \
+  python 429-wait.py --interval 300 --tag mytask \
       --on-recover "claude --resume <session-id> -p continue"
 
 On recovery (probe returns 200) it runs --on-recover, writes the timestamp to
@@ -94,7 +94,7 @@ def main():
     ap.add_argument("--interval", type=int, default=300, help="seconds between probes")
     ap.add_argument("--max-attempts", type=int, default=120, help="give up after N probes")
     ap.add_argument("--tag", default="default", help="instance tag, one nanny per tag")
-    ap.add_argument("--state-dir", default=os.path.expanduser(os.path.join("~", ".quota-nanny")))
+    ap.add_argument("--state-dir", default=os.path.expanduser(os.path.join("~", ".429-wait")))
     ap.add_argument("--on-recover", default="", help="command to run once quota is back")
     ap.add_argument("--probe-max-tokens", type=int, default=64,
                     help="must be big enough that the relay meters it (64 is calibrated)")

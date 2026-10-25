@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# quota-nanny: wait out an LLM/agent usage limit, then optionally resume work.
+# 429-wait: wait out an LLM/agent usage limit, then optionally resume work.
 #
 # Usage:
-#   quota-nanny.sh --probe "claude -p ping" [--interval 1800] [--max-attempts 48] \
+#   429-wait.sh --probe "claude -p ping" [--interval 1800] [--max-attempts 48] \
 #                  [--resume "claude --continue -p continue"] [--tag default] \
-#                  [--state-dir ~/.quota-nanny]
+#                  [--state-dir ~/.429-wait]
 #
 # While the probe exits non-zero or prints something matching the limit
 # pattern, sleep and retry. On success: run --resume (if given) and exit 0.
@@ -15,7 +15,7 @@ RESUME=""
 INTERVAL=1800
 MAX=48
 TAG="default"
-STATE_DIR="${HOME}/.quota-nanny"
+STATE_DIR="${HOME}/.429-wait"
 PATTERN='usage limit|hit.*limit|rate.?limit|quota|429|403|overloaded|exceeded'
 
 while [ $# -gt 0 ]; do

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  quota-nanny: background daemon that waits out an LLM/agent usage limit.
+  429-wait: background daemon that waits out an LLM/agent usage limit.
 
 .DESCRIPTION
   Runs a cheap probe command every -IntervalSeconds. While the probe output
@@ -11,7 +11,7 @@
   interval.
 
 .EXAMPLE
-  quota-nanny.ps1 -ProbeCommand "claude -p ping --max-turns 1" -IntervalSeconds 1800
+  429-wait.ps1 -ProbeCommand "claude -p ping --max-turns 1" -IntervalSeconds 1800
 #>
 [CmdletBinding()]
 param(
@@ -20,7 +20,7 @@ param(
   [int]$MaxAttempts = 48,
   [string]$LimitPattern = 'usage limit|hit.*limit|rate.?limit|quota|429|403|overloaded|exceeded',
   [string]$ResumeCommand = '',
-  [string]$StateDir = (Join-Path $env:USERPROFILE '.quota-nanny'),
+  [string]$StateDir = (Join-Path $env:USERPROFILE '.429-wait'),
   [string]$Tag = 'default'
 )
 

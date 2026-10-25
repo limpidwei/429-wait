@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  End-to-end test for quota-nanny against the mock LLM.
+  End-to-end test for 429-wait against the mock LLM.
   Verifies the three acceptance criteria:
     1. daemon spawns in background and stays resident
     2. it retries every interval while the probe reports a usage limit
@@ -16,7 +16,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $root      = Split-Path $PSScriptRoot -Parent
-$nanny     = Join-Path $root 'bin\quota-nanny.ps1'
+$nanny     = Join-Path $root 'bin\429-wait.ps1'
 $mock      = Join-Path $root 'mock\mock-llm.ps1'
 $stateDir  = Join-Path $root "tests\state\$RunId"
 $null = New-Item -ItemType Directory -Force -Path $stateDir
@@ -24,7 +24,7 @@ $null = New-Item -ItemType Directory -Force -Path $stateDir
 $mockState   = Join-Path $stateDir 'mock-state.json'
 $resumeMark  = Join-Path $stateDir 'resume-fired.txt'
 $resumeScr   = Join-Path $root 'mock\resume-mark.ps1'
-# paths under D:\quota-nanny contain no spaces -> no nested quoting needed
+# paths under D:\429-wait contain no spaces -> no nested quoting needed
 $probeCmd  = "pwsh -NoProfile -File $mock -StateFile $mockState"
 $resumeCmd = "pwsh -NoProfile -File $resumeScr -MarkFile $resumeMark"
 

@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-  quota-nanny-watch: tails a log file; when a usage-limit error appears,
-  spawns a background quota-nanny daemon (once) to poll until recovery.
+  429-wait-watch: tails a log file; when a usage-limit error appears,
+  spawns a background 429-wait daemon (once) to poll until recovery.
 
 .EXAMPLE
-  quota-nanny-watch.ps1 -LogFile C:\path\to\agent.log -ProbeCommand "claude -p ping --max-turns 1"
+  429-wait-watch.ps1 -LogFile C:\path\to\agent.log -ProbeCommand "claude -p ping --max-turns 1"
 #>
 [CmdletBinding()]
 param(
@@ -14,13 +14,13 @@ param(
   [int]$IntervalSeconds = 1800,
   [int]$MaxAttempts = 48,
   [string]$ResumeCommand = '',
-  [string]$StateDir = (Join-Path $env:USERPROFILE '.quota-nanny'),
+  [string]$StateDir = (Join-Path $env:USERPROFILE '.429-wait'),
   [string]$Tag = 'default'
 )
 
 $null = New-Item -ItemType Directory -Force -Path $StateDir
 $watchLog = Join-Path $StateDir "watch-$Tag.log"
-$nanny    = Join-Path $PSScriptRoot 'quota-nanny.ps1'
+$nanny    = Join-Path $PSScriptRoot '429-wait.ps1'
 
 function WLog([string]$msg) {
   Add-Content -Path $watchLog -Value ("{0} {1}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $msg) -Encoding UTF8
