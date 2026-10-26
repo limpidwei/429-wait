@@ -14,6 +14,10 @@ If you use AI coding agents (Claude Code, Codex, Aider), you've hit this wall:
 
 This is the **overnight coding gap**: your agent can work while you sleep, but rate limits turn a productive night into a wasted one.
 
+Here is a real 5-hour usage-limit error captured during daily use. It documents the problem 429-wait is designed to handle; it is **not** an automated-recovery demo.
+
+![Real 429 rate-limit error in a CLI agent session](assets/real-429-screenshot.png)
+
 ### Why this matters now
 
 The shift to AI-assisted coding means developers increasingly run long, autonomous agent sessions — refactoring entire modules, writing test suites, migrating codebases. These tasks routinely exceed the API quota within a single session. Every major LLM provider enforces rate limits:
@@ -237,6 +241,10 @@ MIT
 > 睡前开了一个复杂的编程任务。agent 跑了一个小时，撞上 API 额度限制，报错，**直接退出**。第二天早上一看——凌晨两点就停了。六个小时的进度，白白浪费。
 
 这就是**通宵编程断档问题**：agent 可以替你通宵工作，但额度限制把一晚上的生产力打成了碎片。
+
+下面是日常使用中真实撞到的一次 5 小时限额。它展示的是 429-wait 要处理的问题，**不是**自动恢复演示。
+
+![真实 429 限额报错](assets/real-429-screenshot.png)
 
 ### 为什么这个问题现在很重要
 
