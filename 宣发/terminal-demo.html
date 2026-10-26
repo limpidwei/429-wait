@@ -1,0 +1,240 @@
+<title>429-wait Terminal Demo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+  /* Terminal screenshot for promotional material */
+  :root {
+    --bg: #1a1b26;
+    --fg: #c0caf5;
+    --dim: #565f89;
+    --green: #9ece6a;
+    --red: #f7768e;
+    --yellow: #e0af68;
+    --cyan: #7dcfff;
+    --blue: #7aa2f7;
+    --bar-bg: #24283b;
+    --border: #3b4261;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1a1b26; --fg: #c0caf5;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1a1b26; --fg: #c0caf5;
+    color-scheme: dark;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
+    font-size: 13.5px;
+    line-height: 1.65;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding-block: 24px;
+  }
+  .terminal {
+    max-width: 780px;
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
+  }
+  .titlebar {
+    background: var(--bar-bg);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+    user-select: none;
+  }
+  .dots {
+    display: flex;
+    gap: 6px;
+  }
+  .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+  .dot.r { background: #f7768e; }
+  .dot.y { background: #e0af68; }
+  .dot.g { background: #9ece6a; }
+  .titlebar-text {
+    color: var(--dim);
+    font-size: 12px;
+    flex: 1;
+    text-align: center;
+    margin-right: 44px;
+  }
+  .content {
+    padding: 16px 20px 20px;
+    overflow-x: auto;
+  }
+  .prompt {
+    color: var(--blue);
+  }
+  .cmd {
+    color: var(--fg);
+    font-weight: 600;
+  }
+  .output {
+    color: var(--fg);
+  }
+  .err {
+    color: var(--red);
+  }
+  .banner {
+    color: var(--yellow);
+    font-weight: 600;
+  }
+  .log {
+    color: var(--dim);
+    font-size: 12.5px;
+  }
+  .log .ts {
+    color: var(--dim);
+  }
+  .log .limited {
+    color: var(--yellow);
+  }
+  .log .recovered {
+    color: var(--green);
+    font-weight: 600;
+  }
+  .success {
+    color: var(--green);
+    font-weight: 600;
+  }
+  .resumed {
+    color: var(--cyan);
+  }
+  .line {
+    min-height: 1.65em;
+  }
+  .sep {
+    height: 6px;
+  }
+  .fade-in {
+    animation: fadeIn 0.3s ease-out both;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(2px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  /* Watermark */
+  .watermark {
+    text-align: center;
+    color: var(--dim);
+    font-size: 11px;
+    margin-top: 12px;
+    opacity: 0.7;
+    letter-spacing: 0.5px;
+  }
+  .watermark a {
+    color: var(--blue);
+    text-decoration: none;
+  }
+</style>
+
+<div class="terminal">
+  <div class="titlebar">
+    <div class="dots">
+      <div class="dot r"></div>
+      <div class="dot y"></div>
+      <div class="dot g"></div>
+    </div>
+    <div class="titlebar-text">Terminal &mdash; claude --continue</div>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+<div class="watermark">github.com/limpidwei/429-wait</div>
+
+<script>
+const lines = [
+  { type: 'prompt', text: '~ $ ', cmd: 'claude --continue', delay: 0 },
+  { type: 'sep', delay: 200 },
+  { type: 'output', text: 'Claude Code session resumed.', delay: 400 },
+  { type: 'output', text: 'Continuing implementation for auth module...', delay: 700 },
+  { type: 'output', text: 'Writing src/auth/middleware.ts ...', delay: 600 },
+  { type: 'output', text: 'Writing src/auth/jwt.ts ...', delay: 400 },
+  { type: 'sep', delay: 300 },
+  { type: 'err', text: 'Error: hit usage limit for this billing period', delay: 500 },
+  { type: 'err', text: 'Your credit balance is too low to access the Anthropic API.', delay: 200 },
+  { type: 'sep', delay: 600 },
+  { type: 'banner', text: '============================================================', delay: 300 },
+  { type: 'banner', text: '  429-wait: claude-code hit a rate limit', delay: 100 },
+  { type: 'banner', text: '  Probing API until quota restores...', delay: 100 },
+  { type: 'banner', text: '  (Ctrl+C to abort)', delay: 100 },
+  { type: 'banner', text: '============================================================', delay: 100 },
+  { type: 'sep', delay: 500 },
+  { type: 'log', ts: '2026-10-26 02:15:03', tag: 'shim:claude-code', msg: 'START probe loop: interval=300s endpoint=https://api.anthropic.com', status: '', detail: '', delay: 300 },
+  { type: 'log', ts: '2026-10-26 02:15:04', tag: 'shim:claude-code', msg: 'attempt 1/120: ', status: 'STILL LIMITED', detail: ' :: 429 rate_limit_error', delay: 800 },
+  { type: 'log', ts: '2026-10-26 02:20:04', tag: 'shim:claude-code', msg: 'attempt 2/120: ', status: 'STILL LIMITED', detail: ' :: 429 rate_limit_error', delay: 800 },
+  { type: 'log', ts: '2026-10-26 02:25:05', tag: 'shim:claude-code', msg: 'attempt 3/120: ', status: 'STILL LIMITED', detail: ' :: 429 rate_limit_error', delay: 800 },
+  { type: 'dots', text: '  ... (probing every 5 min) ...', delay: 600 },
+  { type: 'log', ts: '2026-10-26 06:10:07', tag: 'shim:claude-code', msg: 'attempt 48/120: ', status: 'RECOVERED', detail: ' :: HTTP 200', delay: 1000 },
+  { type: 'sep', delay: 400 },
+  { type: 'resumed', text: '429-wait: quota restored! Re-launching: claude --continue', delay: 500 },
+  { type: 'sep', delay: 400 },
+  { type: 'output', text: 'Claude Code session resumed.', delay: 500 },
+  { type: 'output', text: 'Continuing implementation for auth module...', delay: 500 },
+  { type: 'output', text: 'Writing tests for auth module...', delay: 500 },
+  { type: 'output', text: 'Running test suite... 14/14 passed', delay: 600 },
+  { type: 'sep', delay: 200 },
+  { type: 'success', text: 'All tasks completed successfully.', delay: 400 },
+  { type: 'sep', delay: 200 },
+  { type: 'prompt', text: '~ $ ', cmd: '', delay: 500, cursor: true },
+];
+
+const content = document.getElementById('content');
+let totalDelay = 0;
+
+lines.forEach((line, i) => {
+  totalDelay += line.delay;
+  setTimeout(() => {
+    const el = document.createElement('div');
+    el.className = 'line fade-in';
+
+    if (line.type === 'sep') {
+      el.className = 'sep';
+    } else if (line.type === 'prompt') {
+      el.innerHTML = `<span class="prompt">${line.text}</span><span class="cmd">${line.cmd}</span>${line.cursor ? '<span class="cursor" style="display:inline-block;width:8px;height:15px;background:var(--fg);vertical-align:text-bottom;margin-left:2px;animation:blink 1s step-end infinite"></span>' : ''}`;
+    } else if (line.type === 'output') {
+      el.innerHTML = `<span class="output">${line.text}</span>`;
+    } else if (line.type === 'err') {
+      el.innerHTML = `<span class="err">${line.text}</span>`;
+    } else if (line.type === 'banner') {
+      el.innerHTML = `<span class="banner">${line.text}</span>`;
+    } else if (line.type === 'log') {
+      const statusClass = line.status === 'RECOVERED' ? 'recovered' : 'limited';
+      el.className = 'line log fade-in';
+      el.innerHTML = `<span class="ts">${line.ts}</span> [${line.tag}] ${line.msg}<span class="${statusClass}">${line.status}</span>${line.detail}`;
+    } else if (line.type === 'dots') {
+      el.className = 'line log fade-in';
+      el.style.color = 'var(--dim)';
+      el.style.fontStyle = 'italic';
+      el.textContent = line.text;
+    } else if (line.type === 'resumed') {
+      el.innerHTML = `<span class="resumed">${line.text}</span>`;
+    } else if (line.type === 'success') {
+      el.innerHTML = `<span class="success">${line.text}</span>`;
+    }
+
+    content.appendChild(el);
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, totalDelay);
+});
+
+// Blink cursor
+const style = document.createElement('style');
+style.textContent = '@keyframes blink { 50% { opacity: 0 } }';
+document.head.appendChild(style);
+</script>

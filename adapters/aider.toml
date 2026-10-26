@@ -1,0 +1,48 @@
+# Aider adapter for 429-wait shim
+# Aider uses litellm -> OpenAI-compatible endpoints.
+# LIMITATION: only works for non-interactive mode (aider --message "...").
+# In interactive mode, Aider catches rate limits internally and returns
+# to its REPL — the shim can't detect that.
+
+[agent]
+name = "aider"
+command = "aider"
+
+[detection]
+exit_codes = [1]
+require_stderr_match = true
+stderr_patterns = [
+    "[Rr]ate limit",
+    "429",
+    "Too Many Requests",
+    "RateLimitError",
+    "quota.*exceeded",
+]
+
+[probe]
+type = "http"
+endpoint_path = "/v1/chat/completions"
+auth_header = "Authorization"
+auth_prefix = "Bearer "
+
+[probe.settings_keys]
+base_url = "env.OPENAI_BASE_URL"
+api_key = "env.OPENAI_API_KEY"
+model = "env.OPENAI_MODEL"
+
+[probe.defaults]
+base_url = "https://api.openai.com"
+model = "gpt-4o"
+
+[probe.body]
+format = "openai"
+
+[probe.params]
+max_tokens = 16
+timeout = 25
+interval = 300
+max_attempts = 120
+limited_status_codes = [429, 401, 403]
+
+[recovery]
+strategy = "replay"

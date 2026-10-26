@@ -1,0 +1,46 @@
+# Claude Code adapter for 429-wait shim
+# Detects rate limits from Claude Code's stderr + exit code,
+# probes the Anthropic API directly, resumes via `claude --continue`.
+
+[agent]
+name = "claude-code"
+command = "claude"
+
+[detection]
+exit_codes = [1]
+require_stderr_match = true  # exit code 1 alone is too generic
+stderr_patterns = [
+    "hit usage limit",
+    "usage limit",
+    "rate limit",
+    "quota.*exceeded",
+    "429",
+    "403",
+    "overloaded",
+]
+
+[probe]
+type = "http"
+settings_file = "~/.claude/settings.json"
+endpoint_path = "/v1/messages"
+auth_header = "x-api-key"
+extra_headers = { "anthropic-version" = "2023-06-01" }
+
+[probe.settings_keys]
+base_url = "env.ANTHROPIC_BASE_URL"
+api_key = "env.ANTHROPIC_API_KEY"
+model = "env.ANTHROPIC_MODEL"
+
+[probe.body]
+format = "anthropic"
+
+[probe.params]
+max_tokens = 64
+timeout = 25
+interval = 300
+max_attempts = 120
+limited_status_codes = [429, 401, 403]
+
+[recovery]
+strategy = "continue"
+command_template = "{command} --continue"

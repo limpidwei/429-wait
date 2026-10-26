@@ -74,6 +74,7 @@ def probe(base, key, model, max_tokens=64, timeout=25):
             "x-api-key": key,
             "anthropic-version": "2023-06-01",
             "Authorization": "Bearer " + key,
+            "User-Agent": "429-wait/1.0",
         },
     )
     try:
