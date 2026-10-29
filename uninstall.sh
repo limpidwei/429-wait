@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 429-wait uninstaller for macOS / Linux
-# Reads the install manifest and removes everything.
-
 STATE_DIR="$HOME/.429-wait"
 MANIFEST="$STATE_DIR/manifest.json"
 
@@ -18,16 +15,18 @@ ADAPTER_DEST=$(python3 -c "import json; print(json.load(open('$MANIFEST'))['adap
 
 echo "Uninstalling 429-wait ..."
 
-# remove shims
+if [ -f "$DEST/429-wait-settings.py" ]; then
+    python3 "$DEST/429-wait-settings.py" uninstall --hook-script "$DEST/429-wait-hook.py"
+fi
+
 for cmd in $(python3 -c "import json; [print(s) for s in json.load(open('$MANIFEST')).get('shims',[])]"); do
     p="$DEST/$cmd"
-    if [ -f "$p" ]; then
+    if [ -f "$p" ] && grep -Eq '429-wait-(shim|terminal)\.py' "$p"; then
         rm -f "$p"
         echo "  removed shim: $p"
     fi
 done
 
-# remove core files
 for f in $(python3 -c "import json; [print(s) for s in json.load(open('$MANIFEST')).get('files',[])]"); do
     p="$DEST/$f"
     if [ -f "$p" ]; then
@@ -36,19 +35,16 @@ for f in $(python3 -c "import json; [print(s) for s in json.load(open('$MANIFEST
     fi
 done
 
-# remove legacy files
 for f in 429-wait.sh 429-wait.ps1 429-wait-watch.ps1; do
     p="$DEST/$f"
     [ -f "$p" ] && rm -f "$p" && echo "  removed legacy: $p"
 done
 
-# remove adapters
 if [ -d "$ADAPTER_DEST" ]; then
     rm -rf "$ADAPTER_DEST"
     echo "  removed adapters: $ADAPTER_DEST"
 fi
 
-# remove manifest
 rm -f "$MANIFEST"
 echo "  removed manifest"
 

@@ -2,67 +2,63 @@
 
 ## 定位
 
-一站式 CLI agent 额度恢复工具。装一次，无感跟随 agent 启动，撞墙自动等候+恢复。
+一站式 CLI agent 额度恢复工具：真实事件触发、每会话守候、恢复后接续正确上下文，并保留用户在原对话中的输出和控制权。
 
-## 触发架构
+## 当前架构
 
-**Shim 优先，Hook 可选优化。**
+**Claude Code：终端监督器 + StopFailure + probe-only + 原窗口同会话恢复。**
 
-Shim 是通用方案：安装时注入 wrapper，用户照常敲 `claude` / `codex` / `aider`，实际走 429-wait 包裹。agent 撞墙退出 → 429-wait 自动等候 → 恢复后重新拉起。覆盖所有 CLI agent，不依赖任何 agent 自身的 hook 机制。
+- `429-wait-terminal.py` 持有原 stdin/stdout 和 Claude 子进程。
+- 最终429后，Hook 只写当前窗口专属事件；原 TUI 在等待期间保持可见。
+- 探针恢复且状态稳定后，监督器停止空闲旧进程，在原终端执行 `--resume 同session_id 继续`。
+- 用户手动继续、退出或状态无法确认时，不强制重启。
+- 非监督会话才使用后台 fork 兜底。
 
-Hook（如 Claude Code StopFailure）是可选加速：零延迟触发，但只有个别 agent 支持，不通用。
+**Codex / Aider：保留旧 shim。** 该路径仍依赖进程退出与 stderr，不能套用到 Claude TUI。
 
-GUI agent（DeepSeek Harness、WorkBuddy 等）列后续调研，MVP 不做。
+## Phase 1 — 真实机制与探针
 
----
+- [x] 直接 HTTP 探针，避免 CLI 内部重试与微型探针假恢复
+- [x] 真实会话确认初次请求 + 10 次重试后结束本轮、TUI 不退出
+- [x] 本地假429验证 StopFailure payload
+- [x] 后台 fork 全链路验证
+- [x] 真实交互式 TUI 同窗口验证：原session_id记录出现恢复文本
 
-## Phase 1 — Shim 框架 + Claude Code 适配（MVP）
+## Phase 2 — 同窗口恢复主线
 
-- [x] 1.1 shim wrapper 核心逻辑（`bin/429-wait-shim.py`）：透传 agent 命令 → 捕获退出码 + stderr → 匹配限流特征 → 探测 API → 恢复后重新拉起 agent
-- [x] 1.2 适配器配置格式（TOML，每个 agent 一个）：agent 命令名、限流退出码/stderr 正则、HTTP 探测、恢复命令模板
-- [x] 1.3 Claude Code / Codex / Aider 适配器（`adapters/*.toml`）
-- [x] 1.4 install 机制：`install.ps1`（Windows）+ `install.sh`（macOS/Linux），生成 shim 到 PATH，manifest 支持 uninstall
-- [x] 1.5 e2e 测试（`tests/shim-e2e.py`）：mock agent 撞墙 → shim 捕获 → 探测 429x2→200 → 重新拉起 → 成功
+- [x] 每窗口 supervisor token 与 Hook 原子事件
+- [x] 等待期间保留原 TUI，手动继续/退出取消自动恢复
+- [x] 探针成功后停止旧进程，原窗口 `--resume 同session_id 继续`
+- [x] 保留配置参数，过滤初始提示与 session 控制参数
+- [x] 双窗口、重复事件、二次429、探针失败自动化测试
+- [ ] 下一次自然生产 TUI 429 现场复核
+- [ ] 带工具调用的同窗口恢复权限行为实测（不默认提权）
+- [ ] 活动子 Agent 场景的进一步覆盖
 
-## Phase 2 — 更多 agent 适配器
+## Phase 3 — 安装与兼容性
 
-- [ ] 2.1 调研各 CLI agent 撞墙行为：退出码、stderr、API endpoint
-  - Codex CLI
-  - Aider
-  - （其他按用户反馈加）
-- [ ] 2.2 每个 agent 写适配器配置 + e2e mock 测试
-- [ ] 2.3 shim 自动检测 agent 名，加载对应适配器
+- [x] settings 幂等合并，保留其他 hooks/settings
+- [x] Windows / Unix 监督器 wrapper 与安全升级、卸载
+- [x] 隔离安装、升级、重复安装与卸载测试
+- [x] 本机默认切换到同窗口监督器
+- [ ] 更多 Claude Code 版本与 macOS/Linux 实机验证
+- [ ] `429-wait status` 统一查看活动守候与恢复结果
 
-## Phase 3 — 产品化
+## Phase 4 — 分发
 
-- [ ] 3.1 `429-wait install --agent claude-code,codex` 一键注入
-- [ ] 3.2 `429-wait status` 查看 shim 状态、等候状态
-- [ ] 3.3 `429-wait uninstall` 干净还原
-- [ ] 3.4 跨平台验证：Windows / macOS / Linux / Termux
-- [ ] 3.5 文档补充：探针成本量化、v1/v2 关系明确（v2 是主线，v1 遗留 fallback）
+- [ ] Windows / macOS / Linux 包与 Release
+- [ ] PyPI 分发评估
+- [ ] 宣发素材更新为原窗口、原会话恢复
 
-## Phase 4 — 跨平台构建 & 分发
+## 后续可选
 
-- [ ] 4.1 三平台独立包，GitHub Release 各出一个：
-  - `429-wait-windows.zip` — .cmd shim + .py 脚本 + install.ps1
-  - `429-wait-macos.tar.gz` — shell shim + .py 脚本 + install.sh
-  - `429-wait-linux.tar.gz` — shell shim + .py 脚本 + install.sh
-- [ ] 4.2 每个平台的 install 脚本负责：放 shim 到 PATH、注册适配器、验证 Python 可用
-- [ ] 4.3 PyPI 发包：`pip install 429-wait`（跨平台，自动检测 OS 放对应 shim）
-- [ ] 4.4 README 重写：按平台 × agent 分栏 quick start
-- [ ] 4.5 更新宣发素材（突出"装完就忘，自动跟随"定位）
-- [ ] 4.6 GitHub Release + tag（CI 自动打三平台包）
+- 共享探测协调器，减少多窗口同时等待时的重复探针
+- 守候状态显示与恢复完成通知
+- 其他支持失败 Hook 的 Agent 适配
 
-## 可选优化（非 MVP）
+## 不做
 
-- [ ] Claude Code StopFailure hook 集成 — 零延迟触发，shim 已经能用，这是锦上添花
-- [ ] Windows pid 守卫改用 tasklist/psutil 替代 os.kill(pid, 0)
-- [x] install.sh for Linux/macOS（已实现）
-
----
-
-## 不做（MVP 范围外）
-
-- GUI agent 适配（DeepSeek Harness、ZCode、WorkBuddy）— 需要常驻进程 + 进程监控，工程量大，用户少
-- WorkBuddy 积分制 — 机制完全不同（每天领积分），不是 429 限流
-- 日志尾随模式 — 每个 agent 日志格式不同，维护成本高，shim 能覆盖同样场景
+- 通过 GUI 自动化向原 TUI“按继续”作为主线
+- 用进程退出检测覆盖不会退出的交互式 Claude
+- 为恢复默认增加提权参数
+- 在用户手动继续或退出后强制抢回终端

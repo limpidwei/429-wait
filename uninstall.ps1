@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Uninstalls 429-wait: removes shims, scripts, and adapters using the manifest.
+  Uninstalls 429-wait hooks, shims, scripts, and adapters using the manifest.
 #>
 $ErrorActionPreference = 'Stop'
 $stateDir = Join-Path $env:USERPROFILE '.429-wait'
@@ -18,16 +18,25 @@ $adapterDest = $m.adapter_dest
 
 Write-Output 'Uninstalling 429-wait ...'
 
-# remove shims
-foreach ($cmd in $m.shims) {
-    $p = Join-Path $dest "$cmd.cmd"
-    if (Test-Path $p) {
-        Remove-Item $p -Force
-        Write-Output "  removed shim: $p"
+$settingsHelper = Join-Path $dest '429-wait-settings.py'
+if (Test-Path $settingsHelper) {
+    & python -I $settingsHelper uninstall --hook-script (Join-Path $dest '429-wait-hook.py')
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Failed to remove the Claude Code StopFailure hook'
     }
 }
 
-# remove core files
+# Remove only shims that still contain our wrapper marker.
+foreach ($cmd in $m.shims) {
+    foreach ($extension in '.cmd', '.ps1') {
+        $p = Join-Path $dest "$cmd$extension"
+        if ((Test-Path $p) -and ((Get-Content $p -Raw) -match '429-wait-(shim|terminal)\.py')) {
+            Remove-Item $p -Force
+            Write-Output "  removed shim: $p"
+        }
+    }
+}
+
 foreach ($f in $m.files) {
     $p = Join-Path $dest $f
     if (Test-Path $p) {
@@ -36,8 +45,7 @@ foreach ($f in $m.files) {
     }
 }
 
-# remove legacy files
-foreach ($f in '429-wait.cmd','429-wait-watch.cmd','429-wait.ps1','429-wait-watch.ps1','429-wait.sh') {
+foreach ($f in '429-wait.cmd', '429-wait-watch.cmd', '429-wait-py.cmd', '429-wait.ps1', '429-wait-watch.ps1', '429-wait.sh') {
     $p = Join-Path $dest $f
     if (Test-Path $p) {
         Remove-Item $p -Force
@@ -45,15 +53,13 @@ foreach ($f in '429-wait.cmd','429-wait-watch.cmd','429-wait.ps1','429-wait-watc
     }
 }
 
-# remove adapters
 if (Test-Path $adapterDest) {
     Remove-Item $adapterDest -Recurse -Force
     Write-Output "  removed adapters: $adapterDest"
 }
 
-# remove manifest
 Remove-Item $manifest -Force
-Write-Output "  removed manifest"
+Write-Output '  removed manifest'
 
 Write-Output ''
 Write-Output 'Done. 429-wait has been uninstalled.'

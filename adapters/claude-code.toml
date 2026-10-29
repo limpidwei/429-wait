@@ -1,6 +1,7 @@
-# Claude Code adapter for 429-wait shim
-# Detects rate limits from Claude Code's stderr + exit code,
-# probes the Anthropic API directly, resumes via `claude --continue`.
+# Legacy Claude Code shim config, retained for manual/older installations.
+# Current installs use bin/429-wait-terminal.py + StopFailure: the supervisor
+# keeps the original TUI, then resumes the same session_id in the same window.
+# Background fork is only a fallback for unsupervised or uncertain states.
 
 [agent]
 name = "claude-code"
