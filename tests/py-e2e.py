@@ -16,6 +16,7 @@ import sys
 import tempfile
 import threading
 import time
+from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 FAILS_BEFORE_OK = 2
@@ -77,6 +78,9 @@ def main():
         "--on-recover", on_recover,
     ]
     proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    before_expired = state["calls"]
+    past = (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat()
+    expired = subprocess.run(cmd + ["--until", past], capture_output=True, text=True, timeout=10)
     srv.shutdown()
 
     log_path = os.path.join(workdir, "nanny-e2e.log")
@@ -89,6 +93,8 @@ def main():
         ("saw RECOVERED", "RECOVERED" in log),
         ("ok file written", os.path.exists(ok_path)),
         ("on-recover ran exactly once", os.path.exists(marker)),
+        ("expired deadline exits without probing", expired.returncode == 2
+         and "EXPIRED" in expired.stdout and state["calls"] == before_expired),
         ("probe count == 3", state["calls"] == FAILS_BEFORE_OK + 1),
         ("limited count == 2", state["limited"] == FAILS_BEFORE_OK),
         ("pid file cleaned up", not os.path.exists(os.path.join(workdir, "nanny-e2e.pid"))),

@@ -14,6 +14,7 @@ Legacy standalone usage remains available:
 """
 import argparse
 import ctypes
+from datetime import datetime
 import json
 import os
 import shutil
@@ -186,6 +187,7 @@ def main():
     ap = argparse.ArgumentParser(description="Wait out an LLM usage limit, then resume.")
     ap.add_argument("--interval", type=int, default=300, help="seconds between probes")
     ap.add_argument("--max-attempts", type=int, default=120, help="give up after N probes")
+    ap.add_argument("--until", help="stop waiting at this ISO 8601 time (include UTC offset)")
     ap.add_argument("--tag", default="default", help="instance tag, one nanny per tag")
     ap.add_argument("--state-dir", default=os.path.expanduser(os.path.join("~", ".429-wait")))
     ap.add_argument("--on-recover", default="", help="legacy shell command to run once quota is back")
@@ -201,6 +203,23 @@ def main():
                     help="recover a session through its agent instead of --on-recover")
     ap.add_argument("--claude-command", default="claude", help=argparse.SUPPRESS)
     args = ap.parse_args()
+
+    deadline = None
+    if args.until:
+        try:
+            until = datetime.fromisoformat(args.until.replace("Z", "+00:00"))
+            if until.utcoffset() is None:
+                raise ValueError("missing UTC offset")
+            deadline = until.timestamp()
+        except (ValueError, OverflowError, OSError):
+            ap.error("--until must be an ISO 8601 time with a UTC offset")
+
+    def remaining():
+        return deadline - time.time() if deadline is not None else float("inf")
+
+    if remaining() <= 0:
+        print("EXPIRED: waiting deadline already passed", flush=True)
+        return 2
 
     if args.recover_agent and (not args.session_id or not args.cwd):
         ap.error("--recover-agent requires --session-id and --cwd")
@@ -248,16 +267,23 @@ def main():
             % (args.tag, args.interval, args.max_attempts, model, args.probe_max_tokens, base))
 
         for attempt in range(1, args.max_attempts + 1):
-            status, detail = probe(base, key, model, args.probe_max_tokens)
+            left = remaining()
+            if left <= 0:
+                log("EXPIRED: waiting deadline reached")
+                return 2
+            status, detail = probe(base, key, model, args.probe_max_tokens, timeout=min(25, left))
+            if remaining() <= 0:
+                log("EXPIRED: waiting deadline reached")
+                return 2
             if status == "limited":
                 log("attempt %d/%d: STILL LIMITED :: %s" % (attempt, args.max_attempts, detail))
                 if attempt < args.max_attempts:
-                    time.sleep(args.interval)
+                    time.sleep(max(0, min(args.interval, remaining())))
                 continue
             if status == "error":
                 log("attempt %d/%d: ERROR (not recovering) :: %s" % (attempt, args.max_attempts, detail))
                 if attempt < args.max_attempts:
-                    time.sleep(min(args.interval, 120))
+                    time.sleep(max(0, min(args.interval, 120, remaining())))
                 continue
 
             log("attempt %d/%d: RECOVERED :: %s" % (attempt, args.max_attempts, detail))

@@ -68,6 +68,8 @@ python bin/429-wait.py --interval 300 --tag mytask \
     --on-recover "your recovery command"
 ```
 
+For a temporary quota window, start one waiter with `--until` and an ISO 8601 deadline including a UTC offset, for example `--until 2026-12-01T23:00:00+08:00`. It exits with code 2 at expiration and cannot invoke recovery after the deadline. If a scheduler is used to launch it, make that launch one-shot so the scheduler also stops firing.
+
 The structured background fallback for an unsupervised Claude session is:
 
 ```bash
@@ -212,6 +214,8 @@ bash 429-wait/install.sh
 python bin/429-wait.py --interval 300 --tag mytask \
     --on-recover "你的恢复命令"
 ```
+
+临时额度窗口只启动一次守候，可传入带时区的截止时间，例如 `--until 2026-12-01T23:00:00+08:00`。过期后以退出码 2 结束，也不会触发续跑。由定时器启动时，建议只安排一次启动。
 
 非监督会话的结构化后台兜底：
 
